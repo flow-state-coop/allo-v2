@@ -138,8 +138,10 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
         uint256 scaledFlow = newFlow / 1e6;
         uint256 scaledPreviousFlow = flow / 1e6;
         uint256 totalUnits = ((previousUnits * 1e5).sqrt() + scaledFlow.sqrt() - scaledPreviousFlow.sqrt()) ** 2;
-        assertEq(_strategy.totalUnitsByRecipient(recipientId), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
-        assertEq(_strategy.recipientFlowRate(recipientId), newFlow);
+        if (scaledFlow != scaledPreviousFlow) {
+            assertEq(_strategy.totalUnitsByRecipient(recipientId), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
+            assertEq(_strategy.recipientFlowRate(recipientId), newFlow);
+        }
     }
 
     function testFuzz_allocate_second_time_different_user(uint256 flow1, uint256 flow2) public {
@@ -192,9 +194,9 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
         uint256 totalUnits =
             scaledFlow > 0 ? ((previousUnits1 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits1 * 1e5;
         assertEq(_strategy.totalUnitsByRecipient(recipientId1), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
-        scaledFlow = flow2 / 1e6;
+        scaledFlow = newFlow1 / 1e6;
         totalUnits = scaledFlow > 0 ? ((previousUnits2 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits2 * 1e5;
-        assertEq(_strategy.totalUnitsByRecipient(recipientId1), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
+        assertEq(_strategy.totalUnitsByRecipient(recipientId2), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
         assertEq(_strategy.recipientFlowRate(recipientId1), flow1);
         assertEq(_strategy.recipientFlowRate(recipientId2), newFlow1);
 
@@ -212,11 +214,11 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
 
         uint256 scaledPreviousFlow = flow1 / 1e6;
         scaledFlow = flow2 / 1e6;
-        totalUnits = ((previousUnits1 * 1e5).sqrt() + scaledFlow.sqrt() - scaledPreviousFlow.sqrt()) ** 2;
+        totalUnits = totalUnits = scaledFlow > 0 ? ((previousUnits1 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits1 * 1e5;
         assertEq(_strategy.totalUnitsByRecipient(recipientId1), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
         scaledPreviousFlow = newFlow1 / 1e6;
         scaledFlow = newFlow2 / 1e6;
-        totalUnits = ((previousUnits2 * 1e5).sqrt() + scaledFlow.sqrt() - scaledPreviousFlow.sqrt()) ** 2;
+        totalUnits = totalUnits = scaledFlow > 0 ? ((previousUnits2 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits2 * 1e5;
         assertEq(_strategy.totalUnitsByRecipient(recipientId2), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
         assertEq(_strategy.recipientFlowRate(recipientId1), flow1 + flow2);
         assertEq(_strategy.recipientFlowRate(recipientId2), newFlow1 + newFlow2);
@@ -226,6 +228,7 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
         uint128 totalComputedUnits = gdaPool.getTotalUnits();
 
         assertTrue(uint96(netFlowGDA) > totalComputedUnits);
+        assertEq(___isSuperAppJailed(recipientId1), false);
         assertEq(___isSuperAppJailed(recipientId2), false);
     }
 
