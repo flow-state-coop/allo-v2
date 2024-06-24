@@ -307,7 +307,8 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
             allocationStartTime,
             allocationEndTime,
             minPassportScore,
-            initialSuperAppBalance
+            initialSuperAppBalance,
+            address(0)
         );
     }
 
