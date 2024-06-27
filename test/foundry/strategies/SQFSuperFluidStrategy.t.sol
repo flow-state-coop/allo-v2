@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {SQFSuperFluidStrategy} from "../../../contracts/strategies/_poc/sqf-superfluid/SQFSuperFluidStrategy.sol";
 import {RecipientSuperApp} from "../../../contracts/strategies/_poc/sqf-superfluid/RecipientSuperApp.sol";
 import {RecipientSuperAppFactory} from "../../../contracts/strategies/_poc/sqf-superfluid/RecipientSuperAppFactory.sol";
+import {ERC721Checker} from "../../../contracts/strategies/_poc/sqf-superfluid/ERC721Checker.sol";
 
 import {Native} from "../../../contracts/core/libraries/Native.sol";
 import {Errors} from "../../../contracts/core/libraries/Errors.sol";
@@ -65,6 +66,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
     ISuperToken superFakeDai = ISuperToken(0xD6FAF98BeFA647403cc56bDB598690660D5257d2);
     IERC20 fakeDai = IERC20(0x4247bA6C3658Fa5C0F523BAcea8D0b97aF1a175e);
     address superFakeDaiWhale = 0x1a8b3554089d97Ad8656eb91F34225bf97055C68;
+    address nftToCheck = 0x493E86640E5B33068A17734f2d4a6D6843cC6664;
 
     function setUp() public {
         vm.createSelectFork({blockNumber: 11282376, urlOrAlias: "opsepolia"});
@@ -126,6 +128,28 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(strategy_.allocationEndTime(), allocationEndTime);
         assertEq(strategy_.minPassportScore(), minPassportScore);
         assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
+        assertEq(uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Passport));
+    }
+
+    function test_initialize_withChecker() public {
+        SQFSuperFluidStrategy strategy_ = new SQFSuperFluidStrategy(address(allo()), "SQFSuperFluidStrategyv1");
+        ERC721Checker checker = new ERC721Checker(nftToCheck);
+
+        uint256 poolId_ = __createPool(address(strategy_), address(checker));
+
+        assertEq(strategy_.getPoolId(), poolId_);
+        assertEq(strategy_.useRegistryAnchor(), useRegistryAnchor);
+        assertEq(strategy_.metadataRequired(), metadataRequired);
+        assertEq(address(strategy_.passportDecoder()), passportDecoder);
+        assertEq(strategy_.superfluidHost(), superfluidHost);
+        assertEq(address(strategy_.allocationSuperToken()), allocationSuperToken);
+        assertEq(strategy_.registrationStartTime(), registrationStartTime);
+        assertEq(strategy_.registrationEndTime(), registrationEndTime);
+        assertEq(strategy_.allocationStartTime(), allocationStartTime);
+        assertEq(strategy_.allocationEndTime(), allocationEndTime);
+        assertEq(strategy_.minPassportScore(), minPassportScore);
+        assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
+        assertEq(uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Checker));
     }
 
     function testRevert_initialize_INVALID() public {
@@ -503,6 +527,33 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(_strategy.recipientFlowRate(recipientId), 380517503805);
     }
 
+    function test_allocate_checker() public {
+        ERC721Checker checker = new ERC721Checker(nftToCheck);
+        _strategy = new SQFSuperFluidStrategy(address(allo()), "SQFSuperFluidStrategyv1");
+        vm.prank(superFakeDaiWhale);
+        superFakeDai.transfer(address(_strategy), 420 * 1e16);
+        poolId = __createPool(address(_strategy), address(checker));
+
+        address recipientId = __register_accept_recipient();
+
+        deal(nftToCheck, address(this), 1);
+
+        vm.warp(uint256(allocationStartTime) + 1);
+
+        // unlimited allowance
+        superFakeDai.increaseFlowRateAllowanceWithPermissions(address(_strategy), 7, type(int96).max);
+        allo().allocate(
+            poolId,
+            abi.encode(
+                recipientId,
+                380517503805 // 1 per month
+            )
+        );
+
+        assertEq(_strategy.totalUnitsByRecipient(recipientId), 8);
+        assertEq(_strategy.recipientFlowRate(recipientId), 380517503805);
+    }
+
     function test_allocate_second_time_same_user() public {
         test_allocate();
         address recipientId = profile1_anchor();
@@ -668,6 +719,30 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(newFlowRateToRecipient, 0);
         assertEq(isSuperAppJailed, false);
         assertEq(_strategy.totalUnitsByRecipient(recipientId), 1);
+    }
+
+    function testRevert_allocate_checker_UNATUTHORIZED() public {
+        ERC721Checker checker = new ERC721Checker(nftToCheck);
+        _strategy = new SQFSuperFluidStrategy(address(allo()), "SQFSuperFluidStrategyv1");
+        vm.prank(superFakeDaiWhale);
+        superFakeDai.transfer(address(_strategy), 420 * 1e16);
+        poolId = __createPool(address(_strategy), address(checker));
+
+        address recipientId = __register_accept_recipient();
+
+        vm.warp(uint256(allocationStartTime) + 1);
+
+        // unlimited allowance
+        superFakeDai.increaseFlowRateAllowanceWithPermissions(address(_strategy), 7, type(int96).max);
+
+        vm.expectRevert(UNAUTHORIZED.selector);
+        allo().allocate(
+            poolId,
+            abi.encode(
+                recipientId,
+                380517503805 // 1 per month
+            )
+        );
     }
 
     function testRevert_allocate_UNATUTHORIZED() public {
@@ -845,7 +920,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         return new SQFSuperFluidStrategy(address(allo()), "SQFSuperFluidStrategyv1");
     }
 
-    function __encodeInitializeParams() internal view returns (bytes memory) {
+    function __encodeInitializeParams(address checker) internal view returns (bytes memory) {
         return abi.encode(
             useRegistryAnchor,
             metadataRequired,
@@ -858,7 +933,26 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
             allocationStartTime,
             allocationEndTime,
             minPassportScore,
-            initialSuperAppBalance
+            initialSuperAppBalance,
+            checker
+        );
+    }
+
+     function __encodeInitializeParams() internal view returns (bytes memory) {
+        return abi.encode(
+            useRegistryAnchor,
+            metadataRequired,
+            passportDecoder,
+            superfluidHost,
+            allocationSuperToken,
+            recipientSuperAppFactory,
+            registrationStartTime,
+            registrationEndTime,
+            allocationStartTime,
+            allocationEndTime,
+            minPassportScore,
+            initialSuperAppBalance,
+            address(0)
         );
     }
 
@@ -868,6 +962,19 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
             poolProfile_id(),
             strategy,
             __encodeInitializeParams(),
+            address(superFakeDai),
+            0,
+            Metadata(1, "test"),
+            pool_managers()
+        );
+    }
+
+    function __createPool(address strategy, address checker) internal returns (uint256 _poolId) {
+        vm.prank(pool_admin());
+        _poolId = allo().createPoolWithCustomStrategy(
+            poolProfile_id(),
+            strategy,
+            __encodeInitializeParams(checker),
             address(superFakeDai),
             0,
             Metadata(1, "test"),

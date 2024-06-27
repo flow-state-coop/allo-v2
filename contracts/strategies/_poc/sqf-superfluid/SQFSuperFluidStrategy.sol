@@ -30,6 +30,15 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
     using FixedPointMathLib for uint256;
 
     /// ================================
+    /// =========== Enum ===============
+    /// ================================
+
+    enum AllocationEligibility {
+        Passport,
+        Checker
+    }
+
+    /// ================================
     /// ========== Struct ==============
     /// ================================
 
@@ -56,6 +65,7 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
         uint64 allocationEndTime;
         uint256 minPassportScore;
         uint256 initialSuperAppBalance;
+        address checker;
     }
 
     /// ======================
@@ -120,6 +130,9 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
     /// @notice The pool super token
     ISuperToken public allocationSuperToken;
     ISuperToken public poolSuperToken;
+
+    /// @notice The contract that checks the recipient
+    address public checker;
 
     /// @notice The recipient SuperApp factory
     RecipientSuperAppFactory public recipientSuperAppFactory;
@@ -220,6 +233,7 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
         // Initialize the BaseStrategy with the '_poolId'
         __BaseStrategy_init(_poolId);
 
+        checker = params.checker;
         useRegistryAnchor = params.useRegistryAnchor;
         metadataRequired = params.metadataRequired;
         superfluidHost = params.superfluidHost;
@@ -586,6 +600,15 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
     /// =========================
     /// ==== View Functions =====
     /// =========================
+
+    /// @notice Get the allocation eligibility
+    /// @return The allocation eligibility
+    function getAllocationEligiblity() external view returns (AllocationEligibility) {
+        if (checker != address(0)) {
+            return AllocationEligibility.Checker;
+        }
+        return AllocationEligibility.Passport;
+    }
 
     /// @notice Get the recipient
     /// @param _recipientId ID of the recipient

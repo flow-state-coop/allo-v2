@@ -13,6 +13,7 @@ import {SuperTokenV1Library} from
 
 import {SQFSuperFluidStrategy} from "./SQFSuperFluidStrategy.sol";
 import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+import {IChecker} from "./interfaces/IChecker.sol";
 
 contract RecipientSuperApp is ISuperApp {
     error UNAUTHORIZED();
@@ -40,6 +41,7 @@ contract RecipientSuperApp is ISuperApp {
     address public immutable recipient;
     SQFSuperFluidStrategy public immutable strategy;
     ISuperToken public immutable acceptedToken;
+    address public immutable checker;
 
     modifier onlyRecipient() {
         _checkOnlyRecipient();
@@ -57,6 +59,7 @@ contract RecipientSuperApp is ISuperApp {
         strategy = SQFSuperFluidStrategy(_strategy);
         acceptedToken = _acceptedToken;
         recipient = _recipient;
+        checker = strategy.checker();
     }
 
     /// @notice Withdraw ERC20 funds in an emergency
@@ -80,7 +83,9 @@ contract RecipientSuperApp is ISuperApp {
         internal
         returns (bytes memory newCtx)
     {
-        if (!strategy.isValidAllocator(sender)) revert UNAUTHORIZED();
+        if ((checker != address(0) && !IChecker(checker).isValidAllocator(sender)) || !strategy.isValidAllocator(sender)) {
+            revert UNAUTHORIZED();
+        }
         newCtx = onFlowUpdated(previousFlowRate, newFlowRate, ctx);
     }
 
