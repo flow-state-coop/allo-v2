@@ -43,6 +43,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Goerli
   5: {
@@ -77,6 +81,14 @@ export const strategyConfig: DeployParams = {
   },
   // Sepolia
   11155111: {
+    "ltip-hedgey-governor": {
+      name: "LTIPHedgeyGovernorStrategy",
+      version: "v0.1",
+    },
+    "ltip-hedgey": {
+      name: "LTIPHedgeyStrategy",
+      version: "v0.1",
+    },
     "rfp-simple": {
       name: "RFPSimpleStrategy",
       version: "v1.0",
@@ -104,6 +116,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Optimism
@@ -135,6 +151,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Optimism Goerli
@@ -193,6 +213,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Celo Alfajores
@@ -256,6 +280,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Mumbai
   80001: {
@@ -318,6 +346,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Arbitrum Sepolia
   421614: {
@@ -379,6 +411,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Base Testnet Goerli
@@ -472,6 +508,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Scroll:
   534352: {
@@ -487,6 +527,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Fantom
   250: {
@@ -501,6 +545,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Fantom Testnet
@@ -532,6 +580,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // ZkSync Sepolia Testnet
   300: {
@@ -561,6 +613,10 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
   // Filecoin Calibration Testnet
@@ -603,6 +659,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Lukso Mainnet
   42: {
@@ -618,6 +678,10 @@ export const strategyConfig: DeployParams = {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
     },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
+    },
   },
   // Lukso Testnet
   4201: {
@@ -632,6 +696,25 @@ export const strategyConfig: DeployParams = {
     "direct-grants-lite": {
       name: "DirectGrantsLiteStrategy",
       version: "v1.0",
+    },
+  },
+  // Metis andromeda
+  1088: {
+    "donation-voting-merkle-distribution-direct": {
+      name: "DonationVotingMerkleDistributionDirectTransferStrategy",
+      version: "v2.1",
+    },
+    "direct-grants": {
+      name: "DirectGrantsSimpleStrategy",
+      version: "v2.1",
+    },
+    "direct-grants-lite": {
+      name: "DirectGrantsLiteStrategy",
+      version: "v1.0",
+    },
+    "direct-allocation": {
+      name: "DirectAllocationStrategy",
+      version: "v1.1",
     },
   },
 };

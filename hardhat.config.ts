@@ -50,6 +50,7 @@ const chainIds = {
   avalanche: 43114,
   scroll: 534352,
   "lukso-mainnet": 42,
+  metisAndromeda: 1088
 };
 
 let deployPrivateKey = process.env.DEPLOYER_PRIVATE_KEY as string;
@@ -163,7 +164,10 @@ const config: HardhatUserConfig = {
       "arbitrum-mainnet",
       `https://arb-mainnet.g.alchemy.com/v2/${alchemyIdKey}`,
     ),
-    fantom: createMainnetConfig("fantom-mainnet", "https://rpc.ftm.tools"),
+    "fantom": { 
+      ...createMainnetConfig("fantom-mainnet"),
+      url: "https://fantom-pokt.nodies.app",
+    },
     "celo-mainnet": {
       ...createMainnetConfig("celo-mainnet"),
       url: "https://forno.celo.org",
@@ -174,8 +178,8 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       ...createMainnetConfig("polygon"),
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyIdKey}`,
-      gasPrice: 450000000000,
+      url: `https://polygon-pokt.nodies.app`,
+      // gasPrice: 450000000000,
     },
     avalanche: {
       ...createMainnetConfig("avalanche"),
@@ -192,6 +196,10 @@ const config: HardhatUserConfig = {
     "lukso-mainnet": {
       ...createMainnetConfig("lukso-mainnet"),
       url: "https://42.rpc.thirdweb.com",
+    },
+    metisAndromeda: {
+      ...createMainnetConfig("metisAndromeda"),
+      url: `https://andromeda.metis.io/?owner=1088`,
     },
     // Test Networks
     goerli: createTestnetConfig(
@@ -304,6 +312,7 @@ const config: HardhatUserConfig = {
       "sei-mainnet": process.env.SEITRACE_API_KEY || "",
       "lukso-mainnet": "no-api-key-needed",
       "lukso-testnet": "no-api-key-needed",
+      metisAndromeda: "no-api-key-needed",
     },
     customChains: [
       {
@@ -452,6 +461,15 @@ const config: HardhatUserConfig = {
           browserURL: "https://explorer.execution.mainnet.lukso.network/",
         },
       },
+      {
+        network: "metisAndromeda",
+        chainId: chainIds["metisAndromeda"],
+        urls: {
+          apiURL:
+            "https://api.routescan.io/v2/network/mainnet/evm/1088/etherscan",
+          browserURL: "https://explorer.metis.io",
+        },
+      }
     ],
   },
   abiExporter: abiExporter,
