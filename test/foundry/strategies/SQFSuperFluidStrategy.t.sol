@@ -62,6 +62,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
     uint256 initialSuperAppBalance;
 
     address secondAllocator = makeAddr("second");
+    address thirdAllocator = makeAddr("third");
 
     ISuperToken superFakeDai = ISuperToken(0xD6FAF98BeFA647403cc56bDB598690660D5257d2);
     IERC20 fakeDai = IERC20(0x4247bA6C3658Fa5C0F523BAcea8D0b97aF1a175e);
@@ -82,6 +83,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         superFakeDai.transfer(address(_strategy), 420 * 1e16);
         superFakeDai.transfer(randomAddress(), 20 * 1e18);
         superFakeDai.transfer(secondAllocator, 20 * 1e18);
+        superFakeDai.transfer(thirdAllocator, 20 * 1e18);
 
         fakeDai.transfer(address(this), 420 * 1e19);
         vm.stopPrank();
@@ -128,7 +130,9 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(strategy_.allocationEndTime(), allocationEndTime);
         assertEq(strategy_.minPassportScore(), minPassportScore);
         assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
-        assertEq(uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Passport));
+        assertEq(
+            uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Passport)
+        );
     }
 
     function test_initialize_withChecker() public {
@@ -149,7 +153,9 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(strategy_.allocationEndTime(), allocationEndTime);
         assertEq(strategy_.minPassportScore(), minPassportScore);
         assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
-        assertEq(uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Checker));
+        assertEq(
+            uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Checker)
+        );
     }
 
     function testRevert_initialize_INVALID() public {
@@ -536,9 +542,10 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
 
         address recipientId = __register_accept_recipient();
 
-        deal(nftToCheck, address(this), 1);
+        deal(nftToCheck, address(thirdAllocator), 1);
 
         vm.warp(uint256(allocationStartTime) + 1);
+        vm.startPrank(thirdAllocator);
 
         // unlimited allowance
         superFakeDai.increaseFlowRateAllowanceWithPermissions(address(_strategy), 7, type(int96).max);
@@ -549,6 +556,8 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
                 380517503805 // 1 per month
             )
         );
+
+        vm.stopPrank();
 
         assertEq(_strategy.totalUnitsByRecipient(recipientId), 8);
         assertEq(_strategy.recipientFlowRate(recipientId), 380517503805);
@@ -938,7 +947,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         );
     }
 
-     function __encodeInitializeParams() internal view returns (bytes memory) {
+    function __encodeInitializeParams() internal view returns (bytes memory) {
         return abi.encode(
             useRegistryAnchor,
             metadataRequired,

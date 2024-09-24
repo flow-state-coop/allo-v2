@@ -214,11 +214,13 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
 
         uint256 scaledPreviousFlow = flow1 / 1e6;
         scaledFlow = flow2 / 1e6;
-        totalUnits = totalUnits = scaledFlow > 0 ? ((previousUnits1 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits1 * 1e5;
+        totalUnits = totalUnits =
+            scaledFlow > 0 ? ((previousUnits1 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits1 * 1e5;
         assertEq(_strategy.totalUnitsByRecipient(recipientId1), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
         scaledPreviousFlow = newFlow1 / 1e6;
         scaledFlow = newFlow2 / 1e6;
-        totalUnits = totalUnits = scaledFlow > 0 ? ((previousUnits2 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits2 * 1e5;
+        totalUnits = totalUnits =
+            scaledFlow > 0 ? ((previousUnits2 * 1e5).sqrt() + scaledFlow.sqrt()) ** 2 : previousUnits2 * 1e5;
         assertEq(_strategy.totalUnitsByRecipient(recipientId2), totalUnits > 1e5 ? totalUnits / 1e5 : 1);
         assertEq(_strategy.recipientFlowRate(recipientId1), flow1 + flow2);
         assertEq(_strategy.recipientFlowRate(recipientId2), newFlow1 + newFlow2);

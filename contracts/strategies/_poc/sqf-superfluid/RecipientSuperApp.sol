@@ -83,9 +83,14 @@ contract RecipientSuperApp is ISuperApp {
         internal
         returns (bytes memory newCtx)
     {
-        if ((checker != address(0) && !IChecker(checker).isValidAllocator(sender)) || !strategy.isValidAllocator(sender)) {
+        if (checker != address(0)) {
+            if (!IChecker(checker).isValidAllocator(sender)) {
+                revert UNAUTHORIZED();
+            }
+        } else if (!strategy.isValidAllocator(sender)) {
             revert UNAUTHORIZED();
         }
+
         newCtx = onFlowUpdated(previousFlowRate, newFlowRate, ctx);
     }
 
