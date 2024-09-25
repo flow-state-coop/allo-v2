@@ -60,6 +60,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
     uint64 allocationEndTime;
     uint256 minPassportScore;
     uint256 initialSuperAppBalance;
+    uint256 flowRateScaling;
 
     address secondAllocator = makeAddr("second");
     address thirdAllocator = makeAddr("third");
@@ -98,6 +99,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         allocationStartTime = uint64(block.timestamp) + 120;
         allocationEndTime = uint64(block.timestamp) + uint64(2 days);
         minPassportScore = 69;
+        flowRateScaling = 1e6;
         initialSuperAppBalance = 420 * 1e8;
         recipientSuperAppFactory = address(new RecipientSuperAppFactory());
 
@@ -130,6 +132,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(strategy_.allocationEndTime(), allocationEndTime);
         assertEq(strategy_.minPassportScore(), minPassportScore);
         assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
+        assertEq(strategy_.flowRateScaling(), flowRateScaling);
         assertEq(
             uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Passport)
         );
@@ -153,6 +156,7 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
         assertEq(strategy_.allocationEndTime(), allocationEndTime);
         assertEq(strategy_.minPassportScore(), minPassportScore);
         assertEq(strategy_.initialSuperAppBalance(), initialSuperAppBalance);
+        assertEq(strategy_.flowRateScaling(), flowRateScaling);
         assertEq(
             uint16(strategy_.getAllocationEligiblity()), uint16(SQFSuperFluidStrategy.AllocationEligibility.Checker)
         );
@@ -943,7 +947,8 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
             allocationEndTime,
             minPassportScore,
             initialSuperAppBalance,
-            checker
+            checker,
+            flowRateScaling
         );
     }
 
@@ -961,7 +966,8 @@ contract SQFSuperFluidStrategyTest is RegistrySetupFullLive, AlloSetup, Native, 
             allocationEndTime,
             minPassportScore,
             initialSuperAppBalance,
-            address(0)
+            address(0),
+            flowRateScaling
         );
     }
 

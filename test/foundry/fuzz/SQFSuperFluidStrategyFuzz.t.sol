@@ -59,6 +59,7 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
     uint64 allocationEndTime;
     uint256 minPassportScore;
     uint256 initialSuperAppBalance;
+    uint256 flowRateScaling;
 
     address secondAllocator = makeAddr("second");
 
@@ -93,6 +94,7 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
         allocationStartTime = uint64(block.timestamp) + 120;
         allocationEndTime = uint64(block.timestamp) + uint64(2 days);
         minPassportScore = 69;
+        flowRateScaling = 1e6;
         initialSuperAppBalance = 420 * 1e8;
         recipientSuperAppFactory = address(new RecipientSuperAppFactory());
 
@@ -310,7 +312,8 @@ contract SQFSuperFluidStrategyTestFuzz is RegistrySetupFullLive, AlloSetup, Nati
             allocationEndTime,
             minPassportScore,
             initialSuperAppBalance,
-            address(0)
+            address(0),
+            flowRateScaling
         );
     }
 

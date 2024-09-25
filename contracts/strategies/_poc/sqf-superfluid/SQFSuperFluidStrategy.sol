@@ -66,6 +66,7 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
         uint256 minPassportScore;
         uint256 initialSuperAppBalance;
         address checker;
+        uint256 flowRateScaling;
     }
 
     /// ======================
@@ -133,6 +134,15 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
 
     /// @notice The contract that checks the recipient
     address public checker;
+
+    /// @notice The allocation flow rate is used in the quadratic funding
+    /// formula to calculate the units to be assigned to the recipient.
+    /// The units need to always be less than the total flow rate distributed to
+    /// the GDA pool for funds to be streamed to the recipient, one way to
+    /// ensure this is to to scale the allocation flow rate depending on the
+    /// allocation token.
+    /// @dev Value could be 1e1 for ETHx and 1e6 for DAIx
+    uint256 public flowRateScaling;
 
     /// @notice The recipient SuperApp factory
     RecipientSuperAppFactory public recipientSuperAppFactory;
@@ -246,13 +256,14 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
                 || params.superfluidHost == address(0) || params.passportDecoder == address(0)
         ) revert ZERO_ADDRESS();
 
-        if (params.initialSuperAppBalance == 0) revert INVALID();
+        if (params.initialSuperAppBalance == 0 || params.flowRateScaling == 0) revert INVALID();
 
         allocationSuperToken = ISuperToken(params.allocationSuperToken);
         poolSuperToken = ISuperToken(allo.getPool(poolId).token);
         allocationSuperToken.getUnderlyingToken();
 
         initialSuperAppBalance = params.initialSuperAppBalance;
+        flowRateScaling = params.flowRateScaling;
 
         passportDecoder = IGitcoinPassportDecoder(params.passportDecoder);
         _updatePoolTimestamps(
@@ -524,8 +535,30 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
         }
     }
 
-    /// @notice Adjust the weightings of the recipients
-    /// @dev This can only be called by the super app callback onFlowUpdated
+    /// @notice Adjust the weightings of the recipients, the weights correspond
+    /// to the units in a GDA pool and establish how much of the flow rate
+    /// distributed to the pool is streamed to the recipient address.
+    /// The quadratic funding formula is used to calculate the units based
+    /// on the flow rate allocated to the recipient and because the calculation
+    /// needs to result in a value that is significantly less than the total
+    /// amount being distributed to the pool we scale down the allocated flow
+    /// rate depending on the allocation token used, it is responsibility of
+    /// the initialization function caller to choose a suitable value to use
+    /// for scaling.
+    /// @dev This can only be called by the super app callback onFlowUpdated.
+    /// The units should always be more than zero to avoid an underflow that
+    /// can happen on the subsequent call after the units were set to zero.
+    /// The formula used for the case of flow deletion is the same as doing
+    /// (sqrt(recipientTotalUnits) - sqrt(_previousFlowrate)) ** 2 but with
+    /// the guarantee that the result is a non-zero value because
+    /// x + y > 2 * sqrt(x * y).
+    /// On flow updates, in case of small increments that results in the same
+    /// scaled flow rate as the previous one we don't want the units to be
+    /// recomputed because it can produce a different value due to truncation
+    /// of integers, so if the updated flow rate is not different enough the
+    /// units are left as is.
+    /// In case the scaled flow rate of an update is zero we just use the same
+    /// formula used for deletion.
     /// @param _previousFlowRate The previous flow rate
     /// @param _newFlowRate The new flow rate
     function adjustWeightings(uint256 _previousFlowRate, uint256 _newFlowRate) external {
@@ -537,14 +570,14 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
 
         if (_previousFlowRate == 0) {
             // created a new flow
-            uint256 scaledFlowRate = _newFlowRate / 1e6;
+            uint256 scaledFlowRate = _newFlowRate / flowRateScaling;
 
             if (scaledFlowRate > 0) {
                 recipientTotalUnits = (recipientTotalUnits.sqrt() + scaledFlowRate.sqrt()) ** 2;
             }
         } else if (_newFlowRate == 0) {
             // canceled a flow
-            uint256 scaledFlowRate = _previousFlowRate / 1e6;
+            uint256 scaledFlowRate = _previousFlowRate / flowRateScaling;
 
             if (scaledFlowRate > 0) {
                 recipientTotalUnits =
@@ -552,8 +585,8 @@ contract SQFSuperFluidStrategy is BaseStrategy, ReentrancyGuard {
             }
         } else {
             // updated a flow
-            uint256 scaledNewFlowRate = _newFlowRate / 1e6;
-            uint256 scaledPreviousFlowRate = _previousFlowRate / 1e6;
+            uint256 scaledNewFlowRate = _newFlowRate / flowRateScaling;
+            uint256 scaledPreviousFlowRate = _previousFlowRate / flowRateScaling;
 
             if (scaledNewFlowRate != scaledPreviousFlowRate) {
                 if (scaledNewFlowRate > 0) {
